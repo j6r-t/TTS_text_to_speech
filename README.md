@@ -21,6 +21,9 @@ Run the application using Streamlit:
 streamlit run app.py
 ```
 
+## Deployment
+For instructions on how to deploy this application to the cloud, see the [Deployment Guide](deployment.md).
+
 ## Parameter Logic
 - **Rate:** 0 is default. Positive values increase speed (+%), negative values decrease speed (-%).
 - **Pitch:** 0 is default. Positive values increase pitch (+Hz), negative values decrease pitch (-Hz).

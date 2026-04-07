@@ -1,6 +1,7 @@
 import streamlit as st
 import asyncio
 import os
+import tempfile
 from tts_engine import get_voices, generate_tts
 
 # Page configuration
@@ -15,6 +16,7 @@ st.set_page_config(
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+    @import url('https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css');
 
     html, body, [class*="css"] {
         font-family: 'Outfit', sans-serif;
@@ -71,6 +73,12 @@ st.markdown("""
         text-align: center;
         margin-bottom: 2rem;
     }
+
+    .ph-duotone {
+        vertical-align: middle;
+        margin-right: 8px;
+        font-size: 1.4em;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -83,11 +91,11 @@ def generate_tts_sync(text: str, voice: str, rate: int, pitch: int, output_file:
     return asyncio.run(generate_tts(text, voice, rate, pitch, output_file))
 
 def main():
-    st.markdown('<div class="title-container"><h1>🎙️ Edge-TTS Synthesizer</h1><p style="color: #94a3b8;">Convert text to lifelike speech using Microsoft Edge Neural Voices</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="title-container"><h1><i class="ph-duotone ph-microphone-stage"></i> Edge-TTS Synthesizer</h1><p style="color: #94a3b8;">Convert text to lifelike speech using Microsoft Edge Neural Voices</p></div>', unsafe_allow_html=True)
 
     # Sidebar for settings
     with st.sidebar:
-        st.header("⚙️ Settings")
+        st.markdown('<h3><i class="ph-duotone ph-sliders-horizontal"></i> Settings</h3>', unsafe_allow_html=True)
         
         # Voice selection
         try:
@@ -106,7 +114,7 @@ def main():
 
         st.divider()
         
-        st.subheader("🎚️ Audio Controls")
+        st.markdown('<h4><i class="ph-duotone ph-equalizer"></i> Audio Controls</h4>', unsafe_allow_html=True)
         rate = st.slider("Speech Rate", min_value=-50, max_value=100, value=0, help="Positive increases, negative decreases.")
         pitch = st.slider("Pitch", min_value=-50, max_value=50, value=0, help="Positive increases, negative decreases.")
         
@@ -119,10 +127,10 @@ def main():
         text_input = st.text_area("Enter text here...", height=300, placeholder="Type or paste the text you want to synthesize...")
     
     with col2:
-        st.subheader("📤 Export Options")
+        st.markdown('<h3><i class="ph-duotone ph-export"></i> Export Options</h3>', unsafe_allow_html=True)
         filename = st.text_input("Filename", value="synthesized_audio.mp3")
         
-        generate_btn = st.button("✨ Generate & Play")
+        generate_btn = st.button("Generate & Play") # Removing emoji from button text for consistency or using icon class if possible
         
         if generate_btn:
             if not text_input.strip():
@@ -130,23 +138,31 @@ def main():
             else:
                 with st.spinner("Synthesizing audio..."):
                     try:
-                        output_path = os.path.join(os.getcwd(), filename)
-                        generate_tts_sync(text_input, selected_voice, rate, pitch, output_path)
+                        # Use a temporary file for the synthesis
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
+                            tmp_path = tmp_file.name
+                        
+                        generate_tts_sync(text_input, selected_voice, rate, pitch, tmp_path)
                         
                         st.success("✅ Synthesis complete!")
                         
                         # Play audio
-                        with open(output_path, "rb") as f:
+                        with open(tmp_path, "rb") as f:
                             audio_bytes = f.read()
+                        
                         st.audio(audio_bytes, format="audio/mp3")
                         
                         # Download button
                         st.download_button(
                             label="📥 Download MP3",
                             data=audio_bytes,
-                            file_name=filename,
+                            file_name=filename if filename.endswith(".mp3") else f"{filename}.mp3",
                             mime="audio/mp3",
                         )
+                        
+                        # Cleanup the temporary file
+                        os.unlink(tmp_path)
+                        
                     except Exception as e:
                         st.error(f"Error: {e}")
 

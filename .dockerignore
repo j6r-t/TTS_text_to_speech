@@ -1,0 +1,15 @@
+.git
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.db
+.DS_Store
+synthesized_audio.mp3
+test.mp3
+.agent/
+.gemini/
+.env
+venv/
+env/
